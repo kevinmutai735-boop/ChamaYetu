@@ -14,6 +14,7 @@
   body{ padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
   ::-webkit-scrollbar{height:8px;width:8px;}
   ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px;}
+  @page{ margin: 14mm; }
   @media print{
     .no-print{display:none !important;}
     #printArea{display:block !important;}
@@ -353,23 +354,72 @@
 
   function printMemberStatement(name){
     const entries = transactions.filter(t=>t.name===name);
+    const record = members.find(m=>m.name===name);
     const s = memberStats(name);
-    const rowsHtml = entries.map(t=>`
-      <tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${t.date}</td>
-      <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(t.type)}</td>
-      <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(t.status)}</td>
-      <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">${Number(t.amount).toLocaleString()}</td></tr>`).join('')
-      || `<tr><td colspan="4" style="padding:20px;text-align:center;color:#94a3b8;">No entries recorded.</td></tr>`;
+    const F = "font-family:'Plus Jakarta Sans',Arial,sans-serif;";
+    const rowsHtml = entries.map((t,i)=>`
+      <tr style="background:${i%2?'#f8fafc':'#ffffff'};">
+        <td style="padding:10px 14px;color:#475569;">${t.date}</td>
+        <td style="padding:10px 14px;">${escapeHtml(t.type)}</td>
+        <td style="padding:10px 14px;">
+          <span style="display:inline-block;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:600;
+            background:${t.status==='Paid'?'#dcfce7':'#fef9c3'};color:${t.status==='Paid'?'#15803d':'#a16207'};">${t.status}</span>
+        </td>
+        <td style="padding:10px 14px;text-align:right;font-weight:600;color:#0f172a;">${Number(t.amount).toLocaleString()}</td>
+      </tr>`).join('')
+      || `<tr><td colspan="4" style="padding:28px;text-align:center;color:#94a3b8;">No entries recorded.</td></tr>`;
+
     $('printArea').innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #047857;padding-bottom:14px;margin-bottom:20px;">
-        <div><h1 style="margin:0;font-size:22px;color:#0f172a;">${escapeHtml(name)}</h1><p style="margin:4px 0 0;font-size:12px;color:#64748b;">Chama Treasury statement</p></div>
-        <div style="text-align:right;font-size:11px;color:#64748b;">${issuedLine()}</div></div>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead><tr style="text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;">
-          <th style="padding:8px 10px;">Date</th><th style="padding:8px 10px;">Type</th><th style="padding:8px 10px;">Status</th><th style="padding:8px 10px;text-align:right;">KES</th>
-        </tr></thead><tbody>${rowsHtml}</tbody></table>
-      <div style="display:flex;justify-content:space-between;border-top:3px solid #047857;margin-top:14px;padding-top:12px;font-weight:700;font-size:15px;">
-        <span>Net balance</span><span>KES ${s.net.toLocaleString()}</span></div>`;
+      <div style="${F}max-width:720px;margin:0 auto;">
+        <div style="background:#047857;color:#fff;padding:26px 32px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;">Chama Treasury · Member Statement</div>
+              <div style="font-size:24px;font-weight:800;margin-top:6px;">${escapeHtml(name)}</div>
+              ${record && record.email ? `<div style="font-size:12px;opacity:.85;margin-top:2px;">${escapeHtml(record.email)}</div>` : ''}
+            </div>
+            <div style="text-align:right;font-size:10.5px;opacity:.85;">Issued<br><span style="font-size:13px;font-weight:600;color:#fff;">${new Date().toLocaleDateString()}</span></div>
+          </div>
+        </div>
+
+        <div style="padding:26px 32px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 15px;">
+              <div style="font-size:10.5px;color:#64748b;font-weight:600;">Contributions</div>
+              <div style="font-size:18px;font-weight:800;color:#0f172a;margin-top:3px;">${s.contributions.toLocaleString()}</div>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 15px;">
+              <div style="font-size:10.5px;color:#64748b;font-weight:600;">Fines</div>
+              <div style="font-size:18px;font-weight:800;color:#0f172a;margin-top:3px;">${s.fines.toLocaleString()}</div>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 15px;">
+              <div style="font-size:10.5px;color:#64748b;font-weight:600;">Payouts</div>
+              <div style="font-size:18px;font-weight:800;color:#0f172a;margin-top:3px;">${s.payouts.toLocaleString()}</div>
+            </div>
+          </div>
+
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+            <thead>
+              <tr style="background:#f1f5f9;text-align:left;">
+                <th style="padding:10px 14px;font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">Date</th>
+                <th style="padding:10px 14px;font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">Type</th>
+                <th style="padding:10px 14px;font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">Status</th>
+                <th style="padding:10px 14px;font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;text-align:right;">Amount (KES)</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:3px solid #047857;margin-top:18px;padding-top:14px;">
+            <span style="font-size:14px;font-weight:700;color:#0f172a;">Net balance</span>
+            <span style="font-size:20px;font-weight:800;color:#047857;">KES ${s.net.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div style="padding:14px 32px;border-top:1px solid #e2e8f0;font-size:9.5px;color:#94a3b8;display:flex;justify-content:space-between;">
+          <span>Chama Treasury Dashboard</span><span>For your records — verify against original receipts.</span>
+        </div>
+      </div>`;
     window.print();
   }
 
@@ -380,24 +430,73 @@
     const paid = transactions.filter(t=>t.status==='Paid');
     const sum = type => paid.filter(t=>t.type===type).reduce((s,t)=>s+Number(t.amount||0),0);
     const savings = sum('Contribution'), fines = sum('Fine'), payouts = sum('Payout');
-    const rowsHtml = names.map(name=>{
+    const F = "font-family:'Plus Jakarta Sans',Arial,sans-serif;";
+    const rowsHtml = names.map((name,i)=>{
       const s = memberStats(name);
-      return `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(name)}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">${s.contributions.toLocaleString()}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">${s.fines.toLocaleString()}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">${s.payouts.toLocaleString()}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${s.net.toLocaleString()}</td></tr>`;
-    }).join('') || `<tr><td colspan="5" style="padding:20px;text-align:center;color:#94a3b8;">No members yet.</td></tr>`;
+      return `<tr style="background:${i%2?'#f8fafc':'#ffffff'};">
+        <td style="padding:10px 14px;font-weight:600;color:#0f172a;">${escapeHtml(name)}</td>
+        <td style="padding:10px 14px;text-align:right;color:#475569;">${s.contributions.toLocaleString()}</td>
+        <td style="padding:10px 14px;text-align:right;color:#475569;">${s.fines.toLocaleString()}</td>
+        <td style="padding:10px 14px;text-align:right;color:#475569;">${s.payouts.toLocaleString()}</td>
+        <td style="padding:10px 14px;text-align:right;font-weight:700;color:#0f172a;">${s.net.toLocaleString()}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="5" style="padding:28px;text-align:center;color:#94a3b8;">No members yet.</td></tr>`;
+
     $('printArea').innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #047857;padding-bottom:14px;margin-bottom:20px;">
-        <div><h1 style="margin:0;font-size:22px;color:#0f172a;">Chama Treasury — Full Report</h1></div>
-        <div style="text-align:right;font-size:11px;color:#64748b;">${issuedLine()}</div></div>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead><tr style="text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;">
-          <th style="padding:8px 10px;">Member</th><th style="padding:8px 10px;text-align:right;">Contributions</th><th style="padding:8px 10px;text-align:right;">Fines</th><th style="padding:8px 10px;text-align:right;">Payouts</th><th style="padding:8px 10px;text-align:right;">Net</th>
-        </tr></thead><tbody>${rowsHtml}</tbody></table>
-      <div style="display:flex;justify-content:space-between;border-top:3px solid #047857;margin-top:14px;padding-top:12px;font-weight:700;font-size:15px;">
-        <span>Group remaining balance</span><span>KES ${(savings+fines-payouts).toLocaleString()}</span></div>`;
+      <div style="${F}max-width:760px;margin:0 auto;">
+        <div style="background:#047857;color:#fff;padding:26px 32px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;">Chama Treasury</div>
+              <div style="font-size:24px;font-weight:800;margin-top:6px;">Full Group Report</div>
+            </div>
+            <div style="text-align:right;font-size:10.5px;opacity:.85;">Issued<br><span style="font-size:13px;font-weight:600;color:#fff;">${new Date().toLocaleDateString()}</span></div>
+          </div>
+        </div>
+
+        <div style="padding:26px 32px;">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 15px;">
+              <div style="font-size:10px;color:#64748b;font-weight:600;">Savings</div>
+              <div style="font-size:17px;font-weight:800;color:#0f172a;margin-top:3px;">${savings.toLocaleString()}</div>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 15px;">
+              <div style="font-size:10px;color:#64748b;font-weight:600;">Fines</div>
+              <div style="font-size:17px;font-weight:800;color:#0f172a;margin-top:3px;">${fines.toLocaleString()}</div>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 15px;">
+              <div style="font-size:10px;color:#64748b;font-weight:600;">Payouts</div>
+              <div style="font-size:17px;font-weight:800;color:#0f172a;margin-top:3px;">${payouts.toLocaleString()}</div>
+            </div>
+            <div style="border:1px solid #047857;background:#ecfdf5;border-radius:10px;padding:12px 15px;">
+              <div style="font-size:10px;color:#047857;font-weight:700;">Balance</div>
+              <div style="font-size:17px;font-weight:800;color:#047857;margin-top:3px;">${(savings+fines-payouts).toLocaleString()}</div>
+            </div>
+          </div>
+
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+            <thead>
+              <tr style="background:#f1f5f9;text-align:left;">
+                <th style="padding:10px 14px;font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">Member</th>
+                <th style="padding:10px 14px;font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;text-align:right;">Contributions</th>
+                <th style="padding:10px 14px;font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;text-align:right;">Fines</th>
+                <th style="padding:10px 14px;font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;text-align:right;">Payouts</th>
+                <th style="padding:10px 14px;font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;text-align:right;">Net</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:3px solid #047857;margin-top:18px;padding-top:14px;">
+            <span style="font-size:14px;font-weight:700;color:#0f172a;">Group remaining balance</span>
+            <span style="font-size:20px;font-weight:800;color:#047857;">KES ${(savings+fines-payouts).toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div style="padding:14px 32px;border-top:1px solid #e2e8f0;font-size:9.5px;color:#94a3b8;display:flex;justify-content:space-between;">
+          <span>Chama Treasury Dashboard</span><span>Generated automatically — verify against original records.</span>
+        </div>
+      </div>`;
     window.print();
   }
 
